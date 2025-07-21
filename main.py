@@ -6,13 +6,12 @@ from sqlalchemy import create_engine, Column, Integer, Float, String, Date, Bool
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 
-# --- Database Setup ---
 DATABASE_URL = "postgresql+psycopg2://postgres:7410@localhost/kpa_erp"
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# --- Models ---
+#Models
 
 # Wheel Specification table
 class WheelSpecification(Base):
@@ -63,8 +62,6 @@ class BogieChecksheet(Base):
 
 # Create tables
 Base.metadata.create_all(bind=engine)
-
-# --- Pydantic schemas ---
 
 # For Wheel Specification
 class WheelSpecificationFields(BaseModel):
@@ -141,7 +138,7 @@ class BogieChecksheetRead(BaseModel):
     class Config:
         orm_mode = True
 
-# For API responses
+#API responses
 class SuccessResponse(BaseModel):
     success: bool
     message: str
@@ -152,10 +149,9 @@ class FilteredResponse(BaseModel):
     message: str
     data: List[dict]
 
-# --- FastAPI app ---
+#FastAPI app
 app = FastAPI()
 
-# Dependency to get DB session
 def get_db():
     db = SessionLocal()
     try:
@@ -163,12 +159,10 @@ def get_db():
     finally:
         db.close()
 
-# --- Common Helper Functions ---
 def record_exists(db, model, **kwargs):
     return db.query(model).filter_by(**kwargs).first() is not None
 
-# --- Wheel Specification Routes ---
-
+#Wheel Specification Routes
 @app.post("/api/forms/wheel-specifications", response_model=SuccessResponse)
 def create_wheel_spec(spec: WheelSpecificationCreate, db: Session = Depends(get_db)):
     # Check if already exists
@@ -242,7 +236,7 @@ def get_wheel_specs(
         "data": data
     }
 
-# --- Bogie Checksheet Routes ---
+#Bogie Checksheet Routes
 
 @app.post("/api/forms/bogie-checksheet", response_model=SuccessResponse)
 def create_bogie_checksheet(sheet: BogieChecksheetCreate, db: Session = Depends(get_db)):
@@ -331,7 +325,6 @@ def get_bogie_checksheets(
         "data": data
     }
 
-# --- Health Check ---
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
